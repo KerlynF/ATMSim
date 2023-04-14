@@ -90,5 +90,50 @@ namespace ATMSimTests
             respuesta.BalanceActual.Should().BeNull();
 
         }
+
+        //NUEVO CASO DE PRUEBA: Verificar que una consulta de saldo con el PIN correcto devuelve el saldo actual. 
+
+        [Fact]
+        public void Balance_Inquiry_with_correct_pin_returns_accountBalance()
+        {
+            // ARRANGE
+            IHSM hsm = new HSM();
+            IAutorizador sut = CrearAutorizador("Autorizador", hsm);
+            ComponentesLlave llave = hsm.GenerarLlave();
+            sut.InstalarLlave(llave.LlaveEncriptada);
+            string numeroTarjeta = CrearCuentaYTarjeta(sut, TipoCuenta.Corriente, 10_000, "455555", "1234");
+            byte[] criptogramaPin = Encriptar("1234", llave.LlaveEnClaro);
+
+            // ACT
+            RespuestaConsultaDeBalance respuesta = sut.ConsultarBalance(numeroTarjeta, criptogramaPin);
+
+            // ASSERT
+            respuesta.CodigoRespuesta.Should().Be(0);
+            respuesta.BalanceActual.Should().Be(10_000);
+        }
+
+        //NUEVO CASO DE PRUEBA: Verifica que una cuenta con saldo suficiente pueda usarse para autorizar un retiro. 
+        [Fact]
+        public void Accounts_with_sufficient_balance_can_withdraw()
+        {
+            // ARRANGE
+            IHSM hsm = new HSM();
+            IAutorizador sut = CrearAutorizador("Autorizador", hsm);
+            ComponentesLlave llave = hsm.GenerarLlave();
+            sut.InstalarLlave(llave.LlaveEncriptada);
+            string numeroTarjeta = CrearCuentaYTarjeta(sut, TipoCuenta.Corriente, 10_000, "455555", "1234");
+            byte[] criptogramaPin = Encriptar("1234", llave.LlaveEnClaro);
+
+            // ACT
+            RespuestaRetiro respuesta = sut.AutorizarRetiro(numeroTarjeta, 5_000, criptogramaPin);
+
+            // ASSERT
+            respuesta.MontoAutorizado.Should().Be(5_000);
+            respuesta.BalanceLuegoDelRetiro.Should().Be(5_000);
+            respuesta.CodigoRespuesta.Should().Be(0);
+        }
+
+        //CASO NUEVO #3
+      
     }
 }
