@@ -90,8 +90,6 @@ namespace ATMSimTests
             consoleWriter.consoleText.Should().Contain("> Efectivo dispensado: 100");
 
         }
-
-
-
+        //Caso #1: Verificar que el retiro con no balance no es exitoso 
     }
 }
