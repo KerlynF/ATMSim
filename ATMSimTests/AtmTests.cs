@@ -90,6 +90,33 @@ namespace ATMSimTests
             consoleWriter.consoleText.Should().Contain("> Efectivo dispensado: 100");
 
         }
-        //Caso #1: Verificar que el retiro con no balance no es exitoso 
+        //Caso #1: Verificar que el retiro sin balance no es exitoso 
+        [Fact]
+        public void Withdrawal_with_no_balance_on_account_isnt_successful()
+        {
+            // ARRANGE
+            FakeConsoleWriter consoleWriter = new FakeConsoleWriter();
+            FakeThreadSleeper threadSleeper = new FakeThreadSleeper();
+
+            IHSM hsm = new HSM();
+
+            IATMSwitch atmSwitch = CrearSwitch(hsm, consoleWriter);
+
+            IATM sut = CrearATM("AJP001", consoleWriter, threadSleeper);
+            RegistrarATMEnSwitch(sut, atmSwitch, hsm);
+
+            IAutorizador autorizador = CrearAutorizador("AutDB", hsm);
+            RegistrarAutorizadorEnSwitch(autorizador, atmSwitch, hsm);
+
+            string numeroTarjeta = CrearCuentaYTarjeta(autorizador, TipoCuenta.Ahorros, 0, "459413", "1234");
+
+            // ACT
+            sut.EnviarTransactionRequest("AAA", numeroTarjeta, "1234", 0);
+
+            // ASSERT
+            consoleWriter.consoleText.Should().Contain("> Efectivo dispensado: 0");
+
+        }
+        //Caso #2: Verifica la transaccion
     }
 }
