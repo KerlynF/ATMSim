@@ -136,6 +136,39 @@ namespace ATMSimTests
         }
 
 
+        //NEW TESTS 
+        [Fact]
+        public void check_if_atm_cannot_be_registered_if_it_exists(){
+            //arrange
+            IATM atm = CrearATMFalso("AJ007");
+            IHSM hsm = new HSM();
+            FakeConsoleWriter consoleWriter = new FakeConsoleWriter();
+            IATMSwitch switchATM = CrearSwitch(hsm, consoleWriter);
+            ComponentesLlave llaveDelATM = hsm.GenerarLlave();
+            atm.InstalarLlave(llaveDelATM.LlaveEnClaro);
+            switchATM.RegistrarATM(atm, llaveDelATM.LlaveEncriptada);
+
+            //act
+            Action act = () => switchATM.RegistrarATM(atm, llaveDelATM.LlaveEncriptada);
+            //assert
+            act.Should().Throw<EntidadYaRegistradaException>();
+
+        }
+
+        [Fact]
+        public void check_if_the_atm_cannot_be_deleted_if_doesnot_exists(){
+            //arrange
+            IATM atm = CrearATMFalso("AJ008");
+            IHSM hsm = new HSM();
+            FakeConsoleWriter consoleWriter = new FakeConsoleWriter();
+            IATMSwitch switchATM = CrearSwitch(hsm, consoleWriter);
+
+            //act
+            Action act = () => switchATM.EliminarATM(atm);
+
+            //assert
+            act.Should().Throw<EntidadNoRegistradaException>();
+        }
 
     }
 }
