@@ -19,6 +19,7 @@ namespace ATMSim
         public string Nombre { get; }
         public void AsignarPin(string numeroTarjeta, string pin);
         public void InstalarLlave(byte[] criptogramaLlaveAutorizador);
+        public void AsignarLimiteRetiro(double limiteRetiro);
 
 
     }
@@ -95,6 +96,7 @@ namespace ATMSim
         private bool CuentaExiste(string numeroCuenta) => cuentas.Where(x => x.Numero == numeroCuenta).Any();
 
         private Cuenta ObtenerCuenta(string numeroCuenta) => cuentas.Where(x => x.Numero == numeroCuenta).Single();
+        public double LimiteRetiro { get; private set; } = double.MaxValue;
 
         public RespuestaConsultaDeBalance ConsultarBalance(string numeroTarjeta, byte[] criptogramaPin)
         {
@@ -128,6 +130,10 @@ namespace ATMSim
             if (!hsm.ValidarPin(criptogramaPin, criptogramaLlaveAutorizador, criptogramaPinReal))
                 return new RespuestaRetiro(55); // Pin incorrecto
 
+            // Verificar si el monto solicitado excede el límite de retiro
+            if (montoRetiro > LimiteRetiro)
+                return new RespuestaRetiro(911); //Respuesta retiro 101: El monto solicitado excede el límite de retiro
+
             Tarjeta tarjeta = ObtenerTarjeta(numeroTarjeta);
             Cuenta cuenta = ObtenerCuenta(tarjeta.NumeroCuenta);
 
@@ -145,6 +151,13 @@ namespace ATMSim
         public void InstalarLlave(byte[] criptogramaLlaveAutorizador)
         {
             this.criptogramaLlaveAutorizador = criptogramaLlaveAutorizador;
+        }
+        public void AsignarLimiteRetiro(double limiteRetiro)
+        {
+            if (limiteRetiro <= 0)
+                throw new ArgumentException("El límite de retiro debe ser mayor que 0");
+
+            this.LimiteRetiro = limiteRetiro;
         }
 
         public string CrearTarjeta(string bin, string numeroCuenta)
