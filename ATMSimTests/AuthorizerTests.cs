@@ -162,6 +162,28 @@ namespace ATMSimTests
             respuesta.CodigoRespuesta.Should().Be(51);
 
         }
+        //Prueba del limite de retiro asignado (RQ05-LIMITE DE RETIRO)
+        [Fact]
+        public void Withdrawal_Amount_Over_the_Limit()
+        {
+            // ARRANGE
+            IHSM hsm = new HSM();
+            IAutorizador sut = CrearAutorizador("Autorizador", hsm);
+            ComponentesLlave llave = hsm.GenerarLlave();
+            sut.InstalarLlave(llave.LlaveEncriptada);
+            sut.AsignarLimiteRetiro(5_000);
+
+            string numeroTarjeta = CrearCuentaYTarjeta(sut, TipoCuenta.Ahorros, 20_000, "455555", "1234");
+            byte[] criptogramaPin = Encriptar("1234", llave.LlaveEnClaro);
+
+            // ACT
+            RespuestaRetiro respuesta = sut.AutorizarRetiro(numeroTarjeta, 10_000, criptogramaPin);
+
+            // ASSERT
+            respuesta.MontoAutorizado.Should().BeNull();
+            respuesta.BalanceLuegoDelRetiro.Should().BeNull();
+            respuesta.CodigoRespuesta.Should().Be(911);
+        }
 
     }
 }
