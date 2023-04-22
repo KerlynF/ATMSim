@@ -98,5 +98,70 @@ namespace ATMSimTests
 
         }
 
+        //NUEVO CASO DE PRUEBA 1 : Verifica que una consulta de saldo con el PIN correcto devuelve el saldo actual. 
+
+        [Fact]
+        public void Balance_Inquiry_with_correct_pin_returns_accountBalance()
+        {
+            // ARRANGE
+            IHSM hsm = new HSM();
+            IAutorizador sut = CrearAutorizador("Autorizador", hsm);
+            ComponentesLlave llave = hsm.GenerarLlave();
+            sut.InstalarLlave(llave.LlaveEncriptada);
+            string numeroTarjeta = CrearCuentaYTarjeta(sut, TipoCuenta.Corriente, 10_000, "455555", "1234");
+            byte[] criptogramaPin = Encriptar("1234", llave.LlaveEnClaro);
+
+            // ACT
+            RespuestaConsultaDeBalance respuesta = sut.ConsultarBalance(numeroTarjeta, criptogramaPin);
+
+            // ASSERT
+            respuesta.CodigoRespuesta.Should().Be(0);
+            respuesta.BalanceActual.Should().Be(10_000);
+        }
+
+        //NUEVO CASO DE PRUEBA 2 : Verifica que una cuenta con saldo suficiente pueda usarse para autorizar un retiro. 
+
+        [Fact]
+        public void Accounts_with_sufficient_balance_can_withdraw()
+        {
+            // ARRANGE
+            IHSM hsm = new HSM();
+            IAutorizador sut = CrearAutorizador("Autorizador", hsm);
+            ComponentesLlave llave = hsm.GenerarLlave();
+            sut.InstalarLlave(llave.LlaveEncriptada);
+            string numeroTarjeta = CrearCuentaYTarjeta(sut, TipoCuenta.Corriente, 10_000, "455555", "1234");
+            byte[] criptogramaPin = Encriptar("1234", llave.LlaveEnClaro);
+
+            // ACT
+            RespuestaRetiro respuesta = sut.AutorizarRetiro(numeroTarjeta, 5_000, criptogramaPin);
+
+            // ASSERT
+            respuesta.MontoAutorizado.Should().Be(5_000);
+            respuesta.BalanceLuegoDelRetiro.Should().Be(5_000);
+            respuesta.CodigoRespuesta.Should().Be(0);
+        }
+
+
+        // NUEVO CASO DE PRUEBA 3: Verifica que una cuenta  no puede realizar un retiro si no tiene fondos suficientes
+
+        [Fact]
+        public void Accounts_with_insufficient_balance_cannot_withdraw()
+        {
+            // ARRANGE
+            IHSM hsm = new HSM();
+            IAutorizador sut = CrearAutorizador("Autorizador", hsm);
+            ComponentesLlave llave = hsm.GenerarLlave();
+            sut.InstalarLlave(llave.LlaveEncriptada);
+            string numeroTarjeta = CrearCuentaYTarjeta(sut, TipoCuenta.Ahorros, 1_000, "455555", "1234");
+            byte[] criptogramaPin = Encriptar("1234", llave.LlaveEnClaro);
+
+            // ACT
+            RespuestaRetiro respuesta = sut.AutorizarRetiro(numeroTarjeta, 2_000, criptogramaPin);
+
+            // ASSERT
+            respuesta.CodigoRespuesta.Should().Be(51);
+
+        }
+
     }
 }
