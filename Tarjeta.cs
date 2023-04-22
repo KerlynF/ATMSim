@@ -5,6 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace ATMSim
 {
@@ -30,7 +37,7 @@ namespace ATMSim
             if (contieneDigitoVerificador)
             {
                 if (!ValidarIntegridad(numero))
-                        throw new ArgumentException("Dígito verificador inválido");
+                    throw new ArgumentException("Dígito verificador inválido");
             }
             else
             {
@@ -43,7 +50,7 @@ namespace ATMSim
 
         // used switch statement to simplify logic
         public static int CalcularDigitoVerificacion(string numeroSinDigitoVerificador)
-         {
+        {
             int sum = 0;
             int count = 1;
             for (int n = numeroSinDigitoVerificador.Length - 1; n >= 0; n -= 1)
@@ -69,9 +76,10 @@ namespace ATMSim
             string numeroSinDigitoVerificador = numero[..^1];
 
             // Es lo equivalente a `numero[-1]` en python:
-            int digitoVerificadorAValidar = (int) char.GetNumericValue(numero[^1]);
+            int digitoVerificadorAValidar = (int)char.GetNumericValue(numero[^1]);
 
             return CalcularDigitoVerificacion(numeroSinDigitoVerificador) == digitoVerificadorAValidar;
         }
     }
 }
+
