@@ -9,9 +9,16 @@ namespace ATMSimTests
     {
 
 
-        private static string CrearCuentaYTarjeta(IAutorizador autorizador, TipoCuenta tipoCuenta, int balanceInicial, string binTarjeta, string pin)
+        private static string CrearCuentaYTarjeta(IAutorizador autorizador, TipoCuenta tipoCuenta, int balanceInicial, string binTarjeta, string pin, int sobregiro = 0)
         {
-            string numeroCuenta = autorizador.CrearCuenta(tipoCuenta, balanceInicial);
+            string numeroCuenta;
+            if(tipoCuenta == TipoCuenta.Corriente){
+               numeroCuenta = autorizador.CrearCuenta(tipoCuenta, balanceInicial, sobregiro);
+            }
+            else{
+                numeroCuenta = autorizador.CrearCuenta(tipoCuenta, balanceInicial);
+            }
+            
             string numeroTarjeta = autorizador.CrearTarjeta(binTarjeta, numeroCuenta);
             autorizador.AsignarPin(numeroTarjeta, pin);
             return numeroTarjeta;
@@ -48,7 +55,7 @@ namespace ATMSimTests
 
 
         }
-
+        //MODIFIED THIS TEST DUE TO THE NEW FEATURE
         [Fact]
         public void Accounts_of_type_checking_allow_overdraft()
         {
@@ -57,16 +64,16 @@ namespace ATMSimTests
             IAutorizador sut = CrearAutorizador("Autorizador", hsm);
             ComponentesLlave llave = hsm.GenerarLlave();
             sut.InstalarLlave(llave.LlaveEncriptada);
-            string numeroTarjeta = CrearCuentaYTarjeta(sut, TipoCuenta.Corriente, 10_000, "455555", "1234");
+            string numeroTarjeta = CrearCuentaYTarjeta(sut, TipoCuenta.Corriente, 10_000, "455555", "1234", 300);
             byte[] criptogramaPin = Encriptar("1234", llave.LlaveEnClaro);
 
             // ACT
             RespuestaRetiro respuesta = sut.AutorizarRetiro(numeroTarjeta, 15_500, criptogramaPin);
 
             // ASSERT
-            respuesta.MontoAutorizado.Should().Be(15_500);
-            respuesta.BalanceLuegoDelRetiro.Should().Be(-5_500);
-            respuesta.CodigoRespuesta.Should().Be(0);
+               respuesta.MontoAutorizado.Should().BeNull();
+               respuesta.BalanceLuegoDelRetiro.Should().BeNull();
+               respuesta.CodigoRespuesta.Should().Be(51);
 
         }
 
@@ -90,5 +97,6 @@ namespace ATMSimTests
             respuesta.BalanceActual.Should().BeNull();
 
         }
+
     }
 }

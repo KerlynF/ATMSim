@@ -15,7 +15,7 @@ namespace ATMSim
         public RespuestaConsultaDeBalance ConsultarBalance(string numeroTarjeta, byte[] criptogramaPin);
         public RespuestaRetiro AutorizarRetiro(string numeroTarjeta, int montoRetiro, byte[] criptogramaPin);
         public string CrearTarjeta(string bin, string numeroCuenta);
-        public string CrearCuenta(TipoCuenta tipo, int montoDeApertura = 0);
+        public string CrearCuenta(TipoCuenta tipo, int montoDeApertura = 0, int sobregiro = 0);
         public string Nombre { get; }
         public void AsignarPin(string numeroTarjeta, string pin);
         public void InstalarLlave(byte[] criptogramaLlaveAutorizador);
@@ -131,8 +131,9 @@ namespace ATMSim
             Tarjeta tarjeta = ObtenerTarjeta(numeroTarjeta);
             Cuenta cuenta = ObtenerCuenta(tarjeta.NumeroCuenta);
 
-            if (cuenta.Tipo == TipoCuenta.Ahorros && cuenta.Monto < montoRetiro)
+            if ((cuenta.Tipo == TipoCuenta.Ahorros && cuenta.Monto < montoRetiro) || (cuenta.Tipo == TipoCuenta.Corriente && cuenta.Monto - montoRetiro < cuenta.MontoSobregiro * -1))
                 return new RespuestaRetiro(51); // Fondos Insuficientes
+            
             else
             {
                 cuenta.Monto -= montoRetiro;
@@ -171,7 +172,7 @@ namespace ATMSim
             return tarjeta.Numero;
         }
 
-        public string CrearCuenta(TipoCuenta tipo, int montoDeApertura = 0)
+        public string CrearCuenta(TipoCuenta tipo, int montoDeApertura = 0, int sobregiro = 0)
         {
             string numero;
             do
@@ -181,7 +182,7 @@ namespace ATMSim
             } 
             while (CuentaExiste(numero));
 
-            Cuenta cuenta = new Cuenta(numero, tipo, montoDeApertura);
+            Cuenta cuenta = new Cuenta(numero, tipo, montoDeApertura, sobregiro);
             cuentas.Add(cuenta);
 
             return cuenta.Numero;
