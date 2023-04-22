@@ -13,9 +13,9 @@ namespace ATMSim
     public interface IAutorizador
     {
         public RespuestaConsultaDeBalance ConsultarBalance(string numeroTarjeta, byte[] criptogramaPin);
-        public RespuestaRetiro AutorizarRetiro(string numeroTarjeta, int montoRetiro, byte[] criptogramaPin);
+        public RespuestaRetiro AutorizarRetiro(string numeroTarjeta, double montoRetiro, byte[] criptogramaPin);
         public string CrearTarjeta(string bin, string numeroCuenta);
-        public string CrearCuenta(TipoCuenta tipo, int montoDeApertura = 0);
+        public string CrearCuenta(TipoCuenta tipo, double montoDeApertura = 0);
         public string Nombre { get; }
         public void AsignarPin(string numeroTarjeta, string pin);
         public void InstalarLlave(byte[] criptogramaLlaveAutorizador);
@@ -31,16 +31,16 @@ namespace ATMSim
 
     public class RespuestaConsultaDeBalance : Respuesta
     {
-        public int? BalanceActual { get; private set; }
-        public RespuestaConsultaDeBalance(int codigoRespuesta, int? balanceActual = null) : base(codigoRespuesta) 
+        public double? BalanceActual { get; private set; }
+        public RespuestaConsultaDeBalance(int codigoRespuesta, double? balanceActual = null) : base(codigoRespuesta) 
             => BalanceActual = balanceActual;
     }
 
     public class RespuestaRetiro : Respuesta
     {
-        public int? MontoAutorizado { get; private set; }
-        public int? BalanceLuegoDelRetiro { get; private set; }
-        public RespuestaRetiro(int codigoRespuesta, int? montoAutorizado = null, int ? balanceLuegoDelRetiro = null) : base(codigoRespuesta)
+        public double? MontoAutorizado { get; private set; }
+        public double? BalanceLuegoDelRetiro { get; private set; }
+        public RespuestaRetiro(int codigoRespuesta, double? montoAutorizado = null, double ? balanceLuegoDelRetiro = null) : base(codigoRespuesta)
             => (MontoAutorizado, BalanceLuegoDelRetiro) = (montoAutorizado, balanceLuegoDelRetiro);
 
 
@@ -112,10 +112,10 @@ namespace ATMSim
             Tarjeta tarjeta = ObtenerTarjeta(numeroTarjeta);
             Cuenta cuenta = ObtenerCuenta(tarjeta.NumeroCuenta);
 
-            return new RespuestaConsultaDeBalance(0, cuenta.Monto); // Autorizado
+            return new RespuestaConsultaDeBalance(0, Math.Round(cuenta.Monto, 2)); // Autorizado
         }
 
-        public RespuestaRetiro AutorizarRetiro(string numeroTarjeta, int montoRetiro, byte[] criptogramaPin)
+        public RespuestaRetiro AutorizarRetiro(string numeroTarjeta, double montoRetiro, byte[] criptogramaPin)
         {
             if (!TarjetaExiste(numeroTarjeta))
                 return new RespuestaRetiro(56); // Esta tarjeta no se reconoce
@@ -136,7 +136,7 @@ namespace ATMSim
             else
             {
                 cuenta.Monto -= montoRetiro;
-                return new RespuestaRetiro(0, montoRetiro, cuenta.Monto); // Autorizado
+                return new RespuestaRetiro(0, Math.Round(montoRetiro, 2), Math.Round(cuenta.Monto, 2)); // Autorizado
             }
             
         }
@@ -171,7 +171,7 @@ namespace ATMSim
             return tarjeta.Numero;
         }
 
-        public string CrearCuenta(TipoCuenta tipo, int montoDeApertura = 0)
+        public string CrearCuenta(TipoCuenta tipo, double montoDeApertura = 0)
         {
             string numero;
             do
@@ -181,7 +181,7 @@ namespace ATMSim
             } 
             while (CuentaExiste(numero));
 
-            Cuenta cuenta = new Cuenta(numero, tipo, montoDeApertura);
+            Cuenta cuenta = new Cuenta(numero, tipo, Math.Round(montoDeApertura, 2));
             cuentas.Add(cuenta);
 
             return cuenta.Numero;

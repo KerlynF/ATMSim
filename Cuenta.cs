@@ -19,8 +19,8 @@ namespace ATMSim
         public TipoCuenta Tipo { get; private set; }
         public string Numero { get; private set; }
 
-        int monto = 0;
-        public int Monto { 
+        double monto = 0;
+        public double Monto { 
             get { return monto; } 
             set 
             {
@@ -31,7 +31,7 @@ namespace ATMSim
             } 
         }
 
-        public Cuenta(string numero, TipoCuenta tipo, int monto = 0) 
+        public Cuenta(string numero, TipoCuenta tipo, double monto = 0) 
         {
             if (!Regex.Match(numero, @"[0-9]+").Success)
                 throw new ArgumentException("Numero de cuenta inválido");

@@ -9,7 +9,7 @@ namespace ATMSimTests
     {
 
 
-        private static string CrearCuentaYTarjeta(IAutorizador autorizador, TipoCuenta tipoCuenta, int balanceInicial, string binTarjeta, string pin)
+        private static string CrearCuentaYTarjeta(IAutorizador autorizador, TipoCuenta tipoCuenta, double balanceInicial, string binTarjeta, string pin)
         {
             string numeroCuenta = autorizador.CrearCuenta(tipoCuenta, balanceInicial);
             string numeroTarjeta = autorizador.CrearTarjeta(binTarjeta, numeroCuenta);
@@ -88,6 +88,29 @@ namespace ATMSimTests
             // ASSERT
             respuesta.CodigoRespuesta.Should().Be(55);
             respuesta.BalanceActual.Should().BeNull();
+
+        }
+        //prueba del req01-Montos Decimales (montos y balances en decimales)
+        [Fact]
+        public void Withdrawals_with_two_decimal()
+        {
+            // ARRANGE
+            IHSM hsm = new HSM();
+            IAutorizador sut = CrearAutorizador("Autorizador", hsm);
+            ComponentesLlave llave = hsm.GenerarLlave();
+            sut.InstalarLlave(llave.LlaveEncriptada);
+            string numeroTarjeta = CrearCuentaYTarjeta(sut, TipoCuenta.Ahorros, 6_000.029, "455555", "1234");
+
+            byte[] criptogramaPinCorrecto = Encriptar("1234", llave.LlaveEnClaro);
+
+            // ACT
+            RespuestaRetiro respuesta = sut.AutorizarRetiro(numeroTarjeta, 3_000.053, criptogramaPinCorrecto);
+
+            // ASSERT
+            respuesta.MontoAutorizado.Should().Be(3_000.05);
+            respuesta.BalanceLuegoDelRetiro.Should().Be(2_999.98);
+            respuesta.CodigoRespuesta.Should().Be(0);
+            
 
         }
     }

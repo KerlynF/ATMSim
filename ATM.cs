@@ -26,8 +26,8 @@ namespace ATMSim
 
     public class ComandoDispensarEfectivo : Comando
     {
-        public int Monto { get; private set; }
-        public ComandoDispensarEfectivo(int monto) { Monto = monto; }
+        public double Monto { get; private set; }
+        public ComandoDispensarEfectivo(double monto) { Monto = monto; }
     }
     
     public class ComandoImprimirRecibo : Comando
@@ -126,7 +126,7 @@ namespace ATMSim
             consoleWriter.ForegroundColor = ConsoleColor.Yellow;
             consoleWriter.Write($"> Efectivo dispensado: ");
             consoleWriter.ResetColor();
-            consoleWriter.WriteLine(comando.Monto);
+            consoleWriter.WriteLine(comando.Monto.ToString());
             threadSleeper.Sleep(2000);
         }
 
