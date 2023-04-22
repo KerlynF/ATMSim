@@ -136,6 +136,65 @@ namespace ATMSimTests
         }
 
 
+        //NEW TESTS 
+        [Fact]
+        public void check_if_atm_cannot_be_registered_if_it_exists(){
+            //arrange
+            IATM atm = CrearATMFalso("AJ007");
+            IHSM hsm = new HSM();
+            FakeConsoleWriter consoleWriter = new FakeConsoleWriter();
+            IATMSwitch switchATM = CrearSwitch(hsm, consoleWriter);
+            ComponentesLlave llaveDelATM = hsm.GenerarLlave();
+            atm.InstalarLlave(llaveDelATM.LlaveEnClaro);
+            switchATM.RegistrarATM(atm, llaveDelATM.LlaveEncriptada);
+
+            //act
+            Action act = () => switchATM.RegistrarATM(atm, llaveDelATM.LlaveEncriptada);
+            //assert
+            act.Should().Throw<EntidadYaRegistradaException>();
+
+        }
+
+        [Fact]
+        public void check_if_the_atm_cannot_be_deleted_if_doesnot_exists(){
+            //arrange
+            IATM atm = CrearATMFalso("AJ008");
+            IHSM hsm = new HSM();
+            FakeConsoleWriter consoleWriter = new FakeConsoleWriter();
+            IATMSwitch switchATM = CrearSwitch(hsm, consoleWriter);
+
+            //act
+            Action act = () => switchATM.EliminarATM(atm);
+
+            //assert
+            act.Should().Throw<EntidadNoRegistradaException>();
+        }
+
+        //if the atm does not exists
+        [Fact]
+        public void check_transaction_error_if_atm_doesnot_exists(){
+            //arrange
+            IHSM hsm = new HSM();
+            FakeConsoleWriter consoleWriter = new FakeConsoleWriter();
+            IATMSwitch newSwitch = CrearSwitch(hsm, consoleWriter);
+            IATM atm = CrearATMFalso("AJ009");
+            ComponentesLlave llaveATM = hsm.GenerarLlave();
+            atm.InstalarLlave(llaveATM.LlaveEnClaro);
+            IAutorizador autorizador = CrearAutorizador("AutDB", hsm);
+            RegistrarAutorizadorEnSwitch(autorizador, newSwitch, hsm);
+            string numeroTarjeta = CrearCuentaYTarjeta(autorizador, TipoCuenta.Ahorros, 20_000, binTarjeta, "1234");
+            byte[] llaveEnClaro = ((FakeATM)atm).Llave;
+            byte[] criptogramaPin = Encriptar("1234", llaveEnClaro);
+            string texto = "Lo Sentimos. En este momento no podemos procesar su transacción.\n\n" +
+                           "Por favor intente más tarde...";
+            //Act
+            List<Comando> act =  newSwitch.Autorizar(atm, teclasConsultaDeBalance, numeroTarjeta, 300, criptogramaPin);
+            ComandoMostrarInfoEnPantalla command = (ComandoMostrarInfoEnPantalla)act[0];
+            //Assert
+            command.Error.Should().BeTrue();
+            command.TextoPantalla.Should().Be(texto);
+            
+        }
 
     }
 }
