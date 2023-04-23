@@ -5,6 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace ATMSim
 {
@@ -12,9 +19,11 @@ namespace ATMSim
     {
         public string Numero { get; private set; }
 
+        //magic number a const
         public static string EnmascararNumero(string numeroTarjeta)
-        { 
-            return numeroTarjeta[0..6] + new String('*', numeroTarjeta.Length - 10) + numeroTarjeta[^4..];
+        {
+            const int CardNumberMaskLength = 10;
+            return numeroTarjeta[0..6] + new String('*', numeroTarjeta.Length - CardNumberMaskLength) + numeroTarjeta[^4..];
         }
 
 
@@ -28,7 +37,7 @@ namespace ATMSim
             if (contieneDigitoVerificador)
             {
                 if (!ValidarIntegridad(numero))
-                        throw new ArgumentException("Dígito verificador inválido");
+                    throw new ArgumentException("Dígito verificador inválido");
             }
             else
             {
@@ -39,36 +48,38 @@ namespace ATMSim
             Numero = numero;
         }
 
+        // used switch statement to simplify logic
         public static int CalcularDigitoVerificacion(string numeroSinDigitoVerificador)
         {
-            /* Esto se llama Algoritmo de Luhn y sirve para
-             * calcular el último dígito de una tarjeta
-             * el cual se llama Check Digit*/
             int sum = 0;
             int count = 1;
-            for (int n = numeroSinDigitoVerificador.Length - 1; n >= 0 ; n -= 1)
+            for (int n = numeroSinDigitoVerificador.Length - 1; n >= 0; n -= 1)
             {
-                int multiplo = count % 2 == 0? 1 : 2; // cada 2 posiciones se multiplica por 2
-                int digito = (int) char.GetNumericValue(numeroSinDigitoVerificador[n]);
-                int prod = digito * multiplo; // se multiplica por 1 o 2 dependiendo de la posición
-                prod = prod > 9 ? prod - 9 : prod; // si es un número de 2 dígitos, se suma cada dígito del número
-                sum += prod; // se suman todos los dígitos
+                int multiplo = count % 2 == 0 ? 1 : 2;
+                switch (multiplo)
+                {
+                    case 1:
+                        sum += (int)char.GetNumericValue(numeroSinDigitoVerificador[n]);
+                        break;
+                    case 2:
+                        int prod = (int)char.GetNumericValue(numeroSinDigitoVerificador[n]) * 2;
+                        sum += prod > 9 ? prod - 9 : prod;
+                        break;
+                }
                 count++;
             }
-
-            // Esto es equivalente a "lo que hay que sumarle al resultado para que llegue a 10"
             return 10 - (sum % 10);
         }
-
         public static bool ValidarIntegridad(string numero)
         {
             // Es lo equivalente a `numero[:-1]` en python:
             string numeroSinDigitoVerificador = numero[..^1];
 
             // Es lo equivalente a `numero[-1]` en python:
-            int digitoVerificadorAValidar = (int) char.GetNumericValue(numero[^1]);
+            int digitoVerificadorAValidar = (int)char.GetNumericValue(numero[^1]);
 
             return CalcularDigitoVerificacion(numeroSinDigitoVerificador) == digitoVerificadorAValidar;
         }
     }
 }
+
