@@ -21,35 +21,48 @@ namespace ATMSim
         public string Numero { get; private set; }
         int montoSobregiro;
         int monto = 0;
-        public int MontoSobregiro{
-            get {
-                if(this.Tipo == TipoCuenta.Corriente){
+        public int MontoSobregiro
+        {
+            get
+            {
+                if (this.Tipo == TipoCuenta.Corriente)
+                {
                     return montoSobregiro;
                 }
                 throw new EstaCuentaNoContieneEseCampoException();
             }
 
-            set{
-                if(this.Tipo != TipoCuenta.Corriente){
-                    throw new EstaCuentaNoContieneEseCampoException();
-                }
-                else{
-                    montoSobregiro = value;
-                }
+            set
+            {
+                SetMontoSobregiro(value);
             }
         }
-        public int Monto { 
-            get { return monto; } 
-            set 
+
+        private void SetMontoSobregiro(int value)
+        {
+            if (this.Tipo != TipoCuenta.Corriente)
+            {
+                throw new EstaCuentaNoContieneEseCampoException();
+            }
+            else
+            {
+                montoSobregiro = value;
+            }
+        }
+
+        public int Monto
+        {
+            get { return monto; }
+            set
             {
                 if (Tipo == TipoCuenta.Ahorros && value < 0)
                     throw new IntentoSobregiroCuentaDeAhorrosException();
                 else
                     monto = value;
-            } 
+            }
         }
 
-        public Cuenta(string numero, TipoCuenta tipo, int monto = 0, int montoSobregiro = 0) 
+        public Cuenta(string numero, TipoCuenta tipo, int monto = 0, int montoSobregiro = 0)
         {
             if (!Regex.Match(numero, @"[0-9]+").Success)
                 throw new ArgumentException("Numero de cuenta inválido");
@@ -57,10 +70,10 @@ namespace ATMSim
             Numero = numero;
             Tipo = tipo;
             Monto = monto;
-            if(tipo == TipoCuenta.Corriente){
+            if (tipo == TipoCuenta.Corriente)
+            {
                 MontoSobregiro = montoSobregiro;
             }
         }
-        
     }
 }
