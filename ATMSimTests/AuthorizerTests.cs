@@ -9,7 +9,7 @@ namespace ATMSimTests
     {
 
 
-        private static string CrearCuentaYTarjeta(IAutorizador autorizador, TipoCuenta tipoCuenta, int balanceInicial, string binTarjeta, string pin, int sobregiro = 0)
+        private static string CrearCuentaYTarjeta(IAutorizador autorizador, TipoCuenta tipoCuenta, double balanceInicial, string binTarjeta, string pin, int sobregiro = 0)
         {
             string numeroCuenta;
             if(tipoCuenta == TipoCuenta.Corriente){
@@ -162,6 +162,7 @@ namespace ATMSimTests
             respuesta.CodigoRespuesta.Should().Be(51);
 
         }
+
         //Prueba del limite de retiro asignado (RQ05-LIMITE DE RETIRO)
         [Fact]
         public void Withdrawal_Amount_Over_the_Limit()
@@ -183,6 +184,30 @@ namespace ATMSimTests
             respuesta.MontoAutorizado.Should().BeNull();
             respuesta.BalanceLuegoDelRetiro.Should().BeNull();
             respuesta.CodigoRespuesta.Should().Be(911);
+        }
+
+        //prueba del Req01-Montos Decimales (montos y balances en decimales)
+        [Fact]
+        public void Withdrawals_with_two_decimal()
+{
+            // ARRANGE
+            IHSM hsm = new HSM();
+            IAutorizador sut = CrearAutorizador("Autorizador", hsm);
+            ComponentesLlave llave = hsm.GenerarLlave();
+            sut.InstalarLlave(llave.LlaveEncriptada);
+            string numeroTarjeta = CrearCuentaYTarjeta(sut, TipoCuenta.Ahorros, 6_000.029, "455555", "1234");
+
+            byte[] criptogramaPinCorrecto = Encriptar("1234", llave.LlaveEnClaro);
+
+            // ACT
+            RespuestaRetiro respuesta = sut.AutorizarRetiro(numeroTarjeta, 3_000.053, criptogramaPinCorrecto);
+
+            // ASSERT
+            respuesta.MontoAutorizado.Should().Be(3_000.05);
+            respuesta.BalanceLuegoDelRetiro.Should().Be(2_999.98);
+            respuesta.CodigoRespuesta.Should().Be(0);
+
+
         }
 
     }
